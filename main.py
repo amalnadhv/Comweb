@@ -1,32 +1,26 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import pymssql
-import os
+import pyodbc
 
 app = FastAPI()
 
-# Allow Netlify/mobile
+# Allow requests from anywhere (Netlify/mobile)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # or ["https://leafy-blini-990d44.netlify.app"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Environment variables (Render)
-DB_SERVER = os.getenv("DB_SERVER", "BSERVER\\PBSERVER")
-DB_USER = os.getenv("DB_USER", "sa")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "SVVsvv@999")
-DB_NAME = os.getenv("DB_NAME", "COM_JSF")
-
 def get_connection():
-    return pymssql.connect(
-        server=DB_SERVER,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME
+    return pyodbc.connect(
+        "Driver={ODBC Driver 17 for SQL Server};"
+        "Server=BSERVER\\PBSERVER;"
+        "Database=COM_JSF;"
+        "UID=sa;"
+        "PWD=SVVsvv@999;"
     )
 
 @app.get("/sales_today")
@@ -59,6 +53,7 @@ def get_sales_today():
 
         actual_sales = float(sales) - float(sales_return)
 
+        # Return JSON explicitly to avoid ngrok HTML issues
         return JSONResponse(
             content={
                 "sales": float(sales),
@@ -68,6 +63,7 @@ def get_sales_today():
         )
 
     except Exception as e:
+        # Catch errors and return JSON error response
         return JSONResponse(
             content={"error": str(e)},
             status_code=500
