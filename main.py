@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import pyodbc
+import os
 
 app = FastAPI()
 
@@ -14,15 +15,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# -------------------------------
+# SQL Server connection settings
+# -------------------------------
+SERVER = os.getenv("DB_SERVER", "BSERVER")  # e.g., your_server.database.windows.net
+DATABASE = os.getenv("DB_NAME", "COM_JSF")
+USERNAME = os.getenv("DB_USER", "sa")
+PASSWORD = os.getenv("DB_PASSWORD", "SVVsvv@999")
+PORT = os.getenv("DB_PORT", 1433)
+
+# Connection string using FreeTDS driver
 def get_connection():
     return pyodbc.connect(
-        "Driver={ODBC Driver 17 for SQL Server};"
-        "Server=BSERVER\\PBSERVER;"
-        "Database=COM_JSF;"
-        "UID=sa;"
-        "PWD=SVVsvv@999;"
+        f"DRIVER=FreeTDS;"
+        f"SERVER={SERVER};"
+        f"PORT={PORT};"
+        f"DATABASE={DATABASE};"
+        f"UID={USERNAME};"
+        f"PWD={PASSWORD};"
+        "TDS_Version=8.0;"
     )
 
+# -------------------------------
+# API endpoint
+# -------------------------------
 @app.get("/sales_today")
 def get_sales_today():
     try:
@@ -53,7 +69,6 @@ def get_sales_today():
 
         actual_sales = float(sales) - float(sales_return)
 
-        # Return JSON explicitly to avoid ngrok HTML issues
         return JSONResponse(
             content={
                 "sales": float(sales),
@@ -63,7 +78,6 @@ def get_sales_today():
         )
 
     except Exception as e:
-        # Catch errors and return JSON error response
         return JSONResponse(
             content={"error": str(e)},
             status_code=500
