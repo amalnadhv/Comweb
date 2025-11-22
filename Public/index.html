@@ -1,0 +1,25 @@
+<div id="data">Loading...</div>
+
+<script>
+fetch("https://b8bc3e0a377a.ngrok-free.app/sales_today")
+  .then(res => {
+    if (!res.ok) throw new Error("Network response was not OK");
+    return res.json();
+  })
+  .then(data => {
+    // Check if data is empty
+    if (!data || Object.keys(data).length === 0) {
+      document.getElementById("data").innerHTML = "No data found";
+      return;
+    }
+    document.getElementById("data").innerHTML = `
+      <p><b>Sales:</b> ${data.sales}</p>
+      <p><b>Sales Return:</b> ${data.sales_return}</p>
+      <p><b>Actual Sales:</b> ${data.actual_sales}</p>
+    `;
+  })
+  .catch(err => {
+    document.getElementById("data").innerHTML = "Unable to load data. Error: " + err;
+    console.error(err);
+  });
+</script>
